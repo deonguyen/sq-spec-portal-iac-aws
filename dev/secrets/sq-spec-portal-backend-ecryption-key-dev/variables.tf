@@ -4,8 +4,8 @@ variable "aws_region" {
   default     = "us-east-2"
 }
 
-variable "iam_user_name" {
-  description = "The name for the IAM user."
+variable "secret_name" {
+  description = "The name for the AWS Secrets Manager secret."
   type        = string
-  default     = "spec-portal-backend-iam-user-dev"
+  default     = "sq-spec-portal-backend-ecryption-key-dev"
 }

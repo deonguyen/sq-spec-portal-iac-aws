@@ -20,7 +20,7 @@ resource "aws_secretsmanager_secret_version" "db_credentials_version" {
 }
 
 resource "aws_db_instance" "default" {
-  identifier           = "spec-portal-postgres-dev"
+  identifier           = "sq-spec-portal-postgres-dev"
   engine               = "postgres"
   engine_version       = "17"
   instance_class       = var.db_instance_class
@@ -34,7 +34,7 @@ resource "aws_db_instance" "default" {
   skip_final_snapshot = true
 
   tags = {
-    Name        = "spec-portal-postgres-dev"
+    Name        = "sq-spec-portal-postgres-dev"
     Environment = "dev"
   }
 }

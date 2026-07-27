@@ -1,13 +1,13 @@
 variable "db_name" {
   description = "The name of the database to create."
   type        = string
-  default     = "specificationcentralizeddbdev"
+  default     = "sqspecportaldbdev"
 }
 
 variable "db_username" {
   description = "The username for the master database user."
   type        = string
-  default     = "specificationcentralizedbackenddevuser"
+  default     = "sqspecportaldbuserdev"
 }
 
 variable "db_instance_class" {

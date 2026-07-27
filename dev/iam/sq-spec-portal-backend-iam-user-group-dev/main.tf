@@ -9,29 +9,33 @@ resource "aws_iam_group_membership" "group_membership" {
   users = [var.iam_user_name]
 }
 
+resource "aws_iam_group_policy_attachment" "group_policy_attachment" {
+  group      = aws_iam_group.user_group.name
+  policy_arn = aws_iam_policy.group_policy.arn
+}
+
 resource "aws_iam_policy" "group_policy" {
   name        = "${var.iam_group_name}-policy"
-  description = "Policy for group ${var.iam_group_name} to access secrets and RDS."
-  path        = "/system/"
+  description = "Policy for the ${var.iam_group_name} group"
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
         Action = [
           "secretsmanager:GetSecretValue",
           "secretsmanager:DescribeSecret"
         ]
-        Resource = [
-          var.db_credentials_secret_arn
+        Effect   = "Allow"
+        Resource = "*" # It's better to restrict this to specific secret ARNs in production
+      },
+      {
+        Action = [
+          "rds-db:connect"
         ]
+        Effect   = "Allow"
+        Resource = "*" # It's better to restrict this to the specific DB user ARN in production
       }
     ]
   })
-}
-
-resource "aws_iam_group_policy_attachment" "group_policy_attachment" {
-  group      = aws_iam_group.user_group.name
-  policy_arn = aws_iam_policy.group_policy.arn
 }
