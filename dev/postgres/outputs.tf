@@ -1,4 +1,10 @@
-output "db_credentials_secret_arn" {
-  description = "The ARN of the secret containing the database credentials."
-  value       = aws_secretsmanager_secret.db_credentials.arn
+output "db_username" {
+  description = "The username for the master database user."
+  value       = var.db_username
+}
+
+output "db_password" {
+  description = "The password for the master database user."
+  value       = random_password.password.result
+  sensitive   = true
 }

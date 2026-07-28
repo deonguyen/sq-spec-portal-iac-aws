@@ -1,22 +1,7 @@
 resource "random_password" "password" {
-  length  = 16
-  special = true
-}
-
-resource "aws_secretsmanager_secret" "db_credentials" {
-  name = "${var.db_name}-credentials"
-}
-
-resource "aws_secretsmanager_secret_version" "db_credentials_version" {
-  secret_id = aws_secretsmanager_secret.db_credentials.id
-  secret_string = jsonencode({
-    username = var.db_username
-    password = random_password.password.result
-    engine   = "postgres"
-    host     = aws_db_instance.default.address
-    port     = aws_db_instance.default.port
-    dbname   = var.db_name
-  })
+  length           = 16
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}<>:?" # Excludes problematic database characters
 }
 
 resource "aws_db_instance" "default" {
