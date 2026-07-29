@@ -1,36 +1,147 @@
-resource "aws_s3_bucket" "pypi_packages" {
-  bucket = var.pypi_bucket_name
+provider "aws" {
+  region = var.aws_region
+}
+
+# Create an S3 bucket to store the Python packages.
+resource "aws_s3_bucket" "pypi_bucket" {
+  bucket = var.bucket_name
 
   tags = {
-    Name = var.pypi_bucket_name
+    Name        = "PyPI Server"
+    Project     = "Private PyPI"
+    ManagedBy   = "Terraform"
   }
 }
 
-data "aws_ami" "amazon_linux_2" {
-  most_recent = true
-  owners      = ["amazon"]
+# Block all public access to the S3 bucket.
+resource "aws_s3_bucket_public_access_block" "pypi_bucket_public_access" {
+  bucket = aws_s3_bucket.pypi_bucket.id
 
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Enable versioning on the S3 bucket to keep a history of your packages.
+resource "aws_s3_bucket_versioning" "pypi_bucket_versioning" {
+  bucket = aws_s3_bucket.pypi_bucket.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
-resource "aws_instance" "pypi_server" {
-  ami                    = data.aws_ami.amazon_linux_2.id
-  instance_type          = var.instance_type
-  subnet_id              = aws_subnet.public.id
-  vpc_security_group_ids = [aws_security_group.pypi_server_sg.id]
-  iam_instance_profile   = aws_iam_instance_profile.pypi_server_instance_profile.name
-  user_data_replace_on_change = true
-  user_data = templatefile("${path.module}/user_data.sh", {
-    pypi_bucket_name = aws_s3_bucket.pypi_packages.bucket
-    aws_region       = var.aws_region,
-    pypi_user        = var.pypi_admin_user,
-    pypi_password    = var.pypi_admin_password
-  })
+# Create an IAM user for uploading packages to the S3 bucket.
+resource "aws_iam_user" "pypi_uploader" {
+  name = var.iam_user_name
+  path = "/system/"
+}
+
+# Generate access keys for the IAM user.
+# These keys will be used to configure your local environment for publishing.
+resource "aws_iam_access_key" "pypi_uploader_keys" {
+  user = aws_iam_user.pypi_uploader.name
+}
+
+# Define an IAM policy that grants the necessary permissions for s3pypi.
+data "aws_iam_policy_document" "pypi_policy_doc" {
+  statement {
+    actions = [
+      "s3:ListBucket",
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject"
+    ]
+    resources = [
+      aws_s3_bucket.pypi_bucket.arn,
+      "${aws_s3_bucket.pypi_bucket.arn}/*",
+    ]
+  }
+}
+
+# Attach the policy to the IAM user.
+resource "aws_iam_user_policy" "pypi_policy_attachment" {
+  name   = "s3pypi-policy"
+  user   = aws_iam_user.pypi_uploader.name
+  policy = data.aws_iam_policy_document.pypi_policy_doc.json
+}
+
+# Create a CloudFront Origin Access Control (OAC)
+resource "aws_cloudfront_origin_access_control" "pypi_oac" {
+  name                              = "${var.bucket_name}-oac"
+  description                       = "OAC for PyPI S3 bucket"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+# Add a bucket policy to allow CloudFront to get objects
+resource "aws_s3_bucket_policy" "pypi_bucket_policy" {
+  bucket = aws_s3_bucket.pypi_bucket.id
+  policy = data.aws_iam_policy_document.cloudfront_policy_doc.json
+}
+
+data "aws_iam_policy_document" "cloudfront_policy_doc" {
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.pypi_bucket.arn}/*"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+      values   = [aws_cloudfront_distribution.pypi_distribution.arn]
+    }
+  }
+}
+
+# Create a CloudFront distribution to serve the packages.
+resource "aws_cloudfront_distribution" "pypi_distribution" {
+  origin {
+    domain_name              = aws_s3_bucket.pypi_bucket.bucket_regional_domain_name
+    origin_id                = "S3-${var.bucket_name}"
+    origin_access_control_id = aws_cloudfront_origin_access_control.pypi_oac.id
+  }
+
+  enabled             = true
+  is_ipv6_enabled     = true
+  comment             = "PyPI server distribution"
+  default_root_object = "index.html"
+
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "S3-${var.bucket_name}"
+
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
 
   tags = {
-    Name = "${var.project_name}-instance"
+    Project   = "Private PyPI"
+    ManagedBy = "Terraform"
   }
 }
