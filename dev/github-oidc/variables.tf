@@ -15,3 +15,15 @@ variable "github_repo" {
   type        = string
   default     = "sq-spec-portal-backend" # TODO: Change to your GitHub repository
 }
+
+variable "allowed_secret_arns" {
+  description = "A list of secret ARNs that GitHub Actions is allowed to access."
+  type        = list(string)
+  default     = []
+}
+
+variable "allowed_s3_bucket_arns" {
+  description = "A list of S3 bucket ARNs that GitHub Actions is allowed to access."
+  type        = list(string)
+  default     = []
+}
