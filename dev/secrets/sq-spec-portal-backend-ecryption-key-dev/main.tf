@@ -1,5 +1,5 @@
-
-# terraform import aws_secretsmanager_secret.encryption_key_secret arn:aws:secretsmanager:us-east-2:885388406688:secret:sq-spec-portal-backend-ecryption-key-dev-pRQuuM
+# Note: To import an existing secret, use a command like the following, replacing <REGION> with the appropriate AWS region.
+# terraform import aws_secretsmanager_secret.encryption_key_secret arn:aws:secretsmanager:<REGION>:885388406688:secret:sq-spec-portal-backend-ecryption-key-dev-pRQuuM
 
 data "aws_secretsmanager_secret_version" "existing" {
   # This data source will not error if the secret is not found.

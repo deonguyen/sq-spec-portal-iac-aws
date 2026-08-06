@@ -37,41 +37,44 @@ resource "aws_iam_role" "github_actions_role" {
 }
 
 resource "aws_iam_policy" "github_actions_policy" {
+  count = length(var.allowed_secret_arns) > 0 || length(var.allowed_s3_bucket_arns) > 0 ? 1 : 0
+
   name        = "${var.github_repo}-github-actions-policy"
   description = "Policy for the GitHub Actions role"
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
+    Statement = concat(
+      var.allowed_secret_arns != null && length(var.allowed_secret_arns) > 0 ? [
       {
         Effect = "Allow"
         Action = [
           "secretsmanager:GetSecretValue",
           "secretsmanager:DescribeSecret"
         ]
-        Resource = "*"
-      },
+        Resource = var.allowed_secret_arns
+      }] : [],
+      var.allowed_s3_bucket_arns != null && length(var.allowed_s3_bucket_arns) > 0 ? [
       {
         Effect = "Allow"
         Action = [
           "s3:ListBucket"
         ]
         Resource = var.allowed_s3_bucket_arns
-      },
+      }] : [],
+      var.allowed_s3_bucket_arns != null && length(var.allowed_s3_bucket_arns) > 0 ? [
       {
         Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject"
-        ]
-        Resource = "*"
-      }
-    ]
+        Action = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+        Resource = [for arn in var.allowed_s3_bucket_arns : "${arn}/*"]
+      }] : []
+    )
   })
 }
 
 resource "aws_iam_role_policy_attachment" "github_actions_policy_attachment" {
+  count = length(var.allowed_secret_arns) > 0 || length(var.allowed_s3_bucket_arns) > 0 ? 1 : 0
+
   role       = aws_iam_role.github_actions_role.name
-  policy_arn = aws_iam_policy.github_actions_policy.arn
+  policy_arn = aws_iam_policy.github_actions_policy[0].arn
 }
