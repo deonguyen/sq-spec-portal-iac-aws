@@ -34,12 +34,7 @@ resource "aws_iam_role" "eks_node_group_role" {
         Principal = {
           Service = "ec2.amazonaws.com"
         }
-      },
-      {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
-        Principal = { "AWS" = aws_iam_role.github_actions_eks_deploy_role.arn }
-      },
+      }
     ]
   })
 }

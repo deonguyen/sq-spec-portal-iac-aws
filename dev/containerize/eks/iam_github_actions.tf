@@ -35,11 +35,6 @@ resource "aws_iam_role_policy" "github_actions_eks_deploy_policy" {
         Action   = "eks:DescribeCluster"
         Effect   = "Allow"
         Resource = aws_eks_cluster.eks_cluster.arn
-      },
-      {
-        Action   = "sts:AssumeRole"
-        Effect   = "Allow"
-        Resource = aws_iam_role.eks_node_group_role.arn
       }
     ]
   })
