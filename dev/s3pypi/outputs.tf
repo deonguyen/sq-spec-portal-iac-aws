@@ -1,6 +1,6 @@
 output "pypi_bucket_name" {
   description = "The name of the S3 bucket for the PyPI server."
-  value       = data.aws_s3_bucket.pypi_bucket.bucket
+  value       = aws_s3_bucket.pypi_bucket.bucket
 }
 
 output "aws_iam_user_name" {

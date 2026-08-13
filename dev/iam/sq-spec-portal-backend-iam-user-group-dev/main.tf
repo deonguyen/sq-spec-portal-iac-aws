@@ -35,6 +35,24 @@ resource "aws_iam_policy" "group_policy" {
         ]
         Effect   = "Allow"
         Resource = "*" # It's better to restrict this to the specific DB user ARN in production
+      },
+      {
+        Action = [
+          "sqs:SendMessage",
+          "sqs:SendMessageBatch",
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:DeleteMessageBatch",
+          "sqs:ChangeMessageVisibility",
+          "sqs:ChangeMessageVisibilityBatch",
+          "sqs:GetQueueAttributes",
+          "sqs:GetQueueUrl",
+          "sqs:ListQueues",
+          "sqs:ListQueueTags",
+          "sqs:ListDeadLetterSourceQueues"
+        ]
+        Effect   = "Allow"
+        Resource = "*" # It's better to restrict this to the specific SQS queue ARNs in production
       }
     ]
   })

@@ -1,7 +1,7 @@
 variable "cluster_name" {
   description = "The name of the EKS cluster"
   type        = string
-  default     = "sq-spec-portal-eks-dev"
+  default     = "sq-spec-portal-eks"
 }
 
 variable "aws_region" {
@@ -31,7 +31,7 @@ variable "public_subnets" {
 variable "instance_types" {
   description = "The instance types for the EKS worker nodes"
   type        = list(string)
-  default     = ["t3.medium"]
+  default     = ["t3.micro"]
 }
 
 variable "desired_size" {
