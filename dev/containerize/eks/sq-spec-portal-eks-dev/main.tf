@@ -1,13 +1,24 @@
 resource "aws_eks_cluster" "eks_cluster" {
   name     = var.cluster_name
   role_arn = aws_iam_role.eks_cluster_role.arn
-
+ 
   vpc_config {
     subnet_ids              = module.vpc.private_subnets
     endpoint_private_access = true
     endpoint_public_access  = true
   }
-
+ 
+  access_config {
+    bootstrap_cluster_creator_admin_permissions = true
+  }
+ 
+  # Authorize the GitHub Actions role to access the cluster
+  aws_auth_additional_config = jsonencode({
+    mapRoles = [
+      { "rolearn" : aws_iam_role.github_actions_eks_deploy_role.arn, "username" : "github-actions", "groups" : ["system:masters"] }
+    ]
+  })
+ 
   depends_on = [
     aws_iam_role_policy_attachment.eks_cluster_policy,
   ]

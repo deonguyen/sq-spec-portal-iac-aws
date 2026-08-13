@@ -34,7 +34,7 @@ resource "aws_iam_role" "eks_node_group_role" {
         Principal = {
           Service = "ec2.amazonaws.com"
         }
-      },
+      }
     ]
   })
 }
