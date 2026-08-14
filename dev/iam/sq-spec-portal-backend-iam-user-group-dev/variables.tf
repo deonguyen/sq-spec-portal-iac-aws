@@ -15,9 +15,3 @@ variable "iam_user_name" {
   type        = string
   default     = "sq-spec-portal-backend-iam-user-dev"
 }
-
-variable "secret_name" {
-  description = "The name of the secret to grant access to."
-  type        = string
-  default     = "sq-spec-portal-db-info"
-}

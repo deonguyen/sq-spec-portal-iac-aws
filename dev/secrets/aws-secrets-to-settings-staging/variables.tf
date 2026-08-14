@@ -10,8 +10,8 @@ variable "secret_name" {
   default     = "AWS-SECRETS-TO-SETTINGS-STAGING"
 }
 
-variable "db_info" {
-  description = "Database connection information"
+variable "settings" {
+  description = "A collection of application settings for the staging environment."
   type = object({
     DB_INFO = string
     ADMIN_SETTINGS = string

@@ -1,7 +1,3 @@
-data "aws_secretsmanager_secret" "db_info" {
-  name = var.secret_name
-}
-
 resource "aws_iam_group" "user_group" {
   name = var.iam_group_name
   path = "/system/"
@@ -31,7 +27,7 @@ resource "aws_iam_policy" "group_policy" {
           "secretsmanager:DescribeSecret"
         ]
         Effect   = "Allow"
-        Resource = data.aws_secretsmanager_secret.db_info.arn
+        Resource = "*"
       },
       {
         Action = [
