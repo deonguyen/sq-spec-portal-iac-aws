@@ -1,3 +1,7 @@
+data "aws_secretsmanager_secret" "db_info" {
+  name = var.secret_name
+}
+
 resource "aws_iam_group" "user_group" {
   name = var.iam_group_name
   path = "/system/"
@@ -27,7 +31,7 @@ resource "aws_iam_policy" "group_policy" {
           "secretsmanager:DescribeSecret"
         ]
         Effect   = "Allow"
-        Resource = "*" # It's better to restrict this to specific secret ARNs in production
+        Resource = data.aws_secretsmanager_secret.db_info.arn
       },
       {
         Action = [
