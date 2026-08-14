@@ -39,12 +39,13 @@ variable "allowed_s3_bucket_arns" {
 variable "allowed_ecr_repository_arns" {
   description = "A list of ECR repository ARNs GitHub Actions is allowed to build and push to."
   type        = list(string)
-  default     = ["arn:aws:ecr:us-east-1:885388406688:repository/sq-spec-portal-backend-admin-repos",
-                 "arn:aws:ecr:us-east-1:885388406688:repository/sq-spec-portal-backend-auth-repos",
-                 "arn:aws:ecr:us-east-1:885388406688:repository/sq-spec-portal-backend-spec-repos",
-                 "arn:aws:ecr:us-east-1:885388406688:repository/sq-spec-portal-backend-snapshot-repos",
-                 # "arn:aws:ecr:us-east-1:885388406688:repository/sq-spec-portal-backend-static-repos"
-                 ]
+  default = [
+    "arn:aws:ecr:us-east-1:885388406688:repository/sq-spec-portal-backend-admin-repos",
+    "arn:aws:ecr:us-east-1:885388406688:repository/sq-spec-portal-backend-auth-repos",
+    "arn:aws:ecr:us-east-1:885388406688:repository/sq-spec-portal-backend-spec-repos",
+    "arn:aws:ecr:us-east-1:885388406688:repository/sq-spec-portal-backend-snapshot-repos",
+    "arn:aws:ecr:us-east-1:885388406688:repository/sq-spec-portal-backend-static-repos"
+  ]
 }
 
 variable "allowed_eks_cluster_arns" {

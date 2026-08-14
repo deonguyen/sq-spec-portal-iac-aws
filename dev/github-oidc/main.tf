@@ -24,13 +24,13 @@ data "aws_iam_policy_document" "github_actions_assume_role_policy" {
 
     condition {
       test     = "StringEquals"
-      variable = "token.actions.githubusercontent.com/stargate:aud"
+      variable = "token.actions.githubusercontent.com:aud"
       values   = ["sts.amazonaws.com"]
     }
 
     condition {
       test     = "StringLike"
-      variable = "token.actions.githubusercontent.com/stargate:sub"
+      variable = "token.actions.githubusercontent.com:sub"
       values   = var.allowed_github_subs
     }
   }
