@@ -7,24 +7,18 @@ variable "aws_region" {
 variable "secret_name" {
   description = "The name of the secret to create."
   type        = string
-  default     = "AWS-SECRETS-TO-SETTINGS-STAGING"
+  default     = "POSTGRES-DB-STAGING"
 }
 
-variable "settings" {
-  description = "A collection of application settings for the staging environment."
-  type = object({
-    DB_INFO = string
-    ADMIN_SETTINGS = string
-    AUTH_SETTINGS = string
-    SPEC_SETTINGS = string
-    SNAPSHOT_SETTINGS = string
-  })
+variable "db_settings" {
+  description = "A map of database connection settings for the staging environment."
+  type        = map(string)
   default = {
-    DB_INFO = "POSTGRES-DB-STAGING"
-    ADMIN_SETTINGS = "ADMIN-SETTINGS-STAGING"
-    AUTH_SETTINGS = "AUTH-SETTINGS-STAGING"
-    SPEC_SETTINGS = "SPEC-SETTINGS-STAGING"
-    SNAPSHOT_SETTINGS = "SNAPSHOT-SETTINGS-STAGING"
+    "host"                 = "your-rds-host.rds.amazonaws.com"
+    "port"                 = "5432"
+    "dbname"               = "your_db_name"
+    "username_secret_name" = "sq-spec-portal-db-user"
+    "password_secret_name" = "sq-spec-portal-db-password"
   }
   sensitive = true
 }

@@ -7,24 +7,12 @@ variable "aws_region" {
 variable "secret_name" {
   description = "The name of the secret to create."
   type        = string
-  default     = "AWS-SECRETS-TO-SETTINGS-STAGING"
+  default     = "SPEC-SETTINGS-STAGING"
 }
 
-variable "settings" {
-  description = "A collection of application settings for the staging environment."
-  type = object({
-    DB_INFO = string
-    ADMIN_SETTINGS = string
-    AUTH_SETTINGS = string
-    SPEC_SETTINGS = string
-    SNAPSHOT_SETTINGS = string
-  })
-  default = {
-    DB_INFO = "POSTGRES-DB-STAGING"
-    ADMIN_SETTINGS = "ADMIN-SETTINGS-STAGING"
-    AUTH_SETTINGS = "AUTH-SETTINGS-STAGING"
-    SPEC_SETTINGS = "SPEC-SETTINGS-STAGING"
-    SNAPSHOT_SETTINGS = "SNAPSHOT-SETTINGS-STAGING"
-  }
+variable "spec_settings" {
+  description = "A map of specification settings for the staging environment."
+  type        = map(string)
+  default     = {}
   sensitive = true
 }

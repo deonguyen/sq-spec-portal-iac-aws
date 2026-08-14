@@ -1,6 +1,6 @@
-resource "aws_secretsmanager_secret" "settings_secret" {
+resource "aws_secretsmanager_secret" "auth_settings_secret" {
   name        = var.secret_name
-  description = "Application settings for the staging environment."
+  description = "Authentication settings for the staging environment."
 
   # For development environments, allow immediate deletion.
   # In production, consider a value like 7-30 days to prevent accidental data loss.
@@ -13,18 +13,18 @@ resource "aws_secretsmanager_secret" "settings_secret" {
   }
 }
 
-resource "aws_secretsmanager_secret_version" "settings_secret_version" {
-  secret_id     = aws_secretsmanager_secret.settings_secret.id
-  # Store the structured settings object as a JSON string in the secret.
-  secret_string = jsonencode(var.settings)
+resource "aws_secretsmanager_secret_version" "auth_settings_version" {
+  secret_id     = aws_secretsmanager_secret.auth_settings_secret.id
+  # Store the authentication settings map as a JSON string.
+  secret_string = jsonencode(var.auth_settings)
 }
 
 output "secret_arn" {
   description = "The ARN of the created Secrets Manager secret."
-  value       = aws_secretsmanager_secret.settings_secret.arn
+  value       = aws_secretsmanager_secret.auth_settings_secret.arn
 }
 
 output "secret_name" {
   description = "The name of the created Secrets Manager secret."
-  value       = aws_secretsmanager_secret.settings_secret.name
+  value       = aws_secretsmanager_secret.auth_settings_secret.name
 }

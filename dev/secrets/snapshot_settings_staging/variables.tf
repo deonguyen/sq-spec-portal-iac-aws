@@ -7,24 +7,20 @@ variable "aws_region" {
 variable "secret_name" {
   description = "The name of the secret to create."
   type        = string
-  default     = "AWS-SECRETS-TO-SETTINGS-STAGING"
+  default     = "SNAPSHOT-SETTINGS-STAGING"
 }
 
-variable "settings" {
-  description = "A collection of application settings for the staging environment."
+variable "snapshot_settings" {
+  description = "A map of snapshot settings for the staging environment."
   type = object({
-    DB_INFO = string
-    ADMIN_SETTINGS = string
-    AUTH_SETTINGS = string
-    SPEC_SETTINGS = string
-    SNAPSHOT_SETTINGS = string
+    DEBUG = string
+    ALLOWED_HOSTS = string
+    DJANGO_RUNSERVER_PORT = string
   })
   default = {
-    DB_INFO = "POSTGRES-DB-STAGING"
-    ADMIN_SETTINGS = "ADMIN-SETTINGS-STAGING"
-    AUTH_SETTINGS = "AUTH-SETTINGS-STAGING"
-    SPEC_SETTINGS = "SPEC-SETTINGS-STAGING"
-    SNAPSHOT_SETTINGS = "SNAPSHOT-SETTINGS-STAGING"
+    DEBUG = "False"
+    ALLOWED_HOSTS = "*"
+    DJANGO_RUNSERVER_PORT = "5014"
   }
   sensitive = true
 }

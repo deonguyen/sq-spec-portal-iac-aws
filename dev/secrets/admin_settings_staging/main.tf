@@ -16,7 +16,7 @@ resource "aws_secretsmanager_secret" "settings_secret" {
 resource "aws_secretsmanager_secret_version" "settings_secret_version" {
   secret_id     = aws_secretsmanager_secret.settings_secret.id
   # Store the structured settings object as a JSON string in the secret.
-  secret_string = jsonencode(var.settings)
+  secret_string = jsonencode(var.admin_settings)
 }
 
 output "secret_arn" {
