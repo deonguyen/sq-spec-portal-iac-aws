@@ -78,7 +78,7 @@ resource "aws_lb_target_group" "this" {
   vpc_id      = module.vpc.vpc_id
 
   health_check {
-    path                = each.value.health_check_path
+    path                = var.health_check_path
     protocol            = "HTTP"
     matcher             = "200-399"
     interval            = 30

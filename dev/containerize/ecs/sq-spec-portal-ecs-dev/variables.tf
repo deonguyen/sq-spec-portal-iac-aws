@@ -27,7 +27,6 @@ variable "services" {
     container_port      = number
     path_patterns       = list(string)
     priority            = number
-    health_check_path   = optional(string, "/")
     desired_count       = optional(number, 1)
     environment         = optional(map(string), {})
   }))
@@ -44,7 +43,6 @@ variable "services" {
       container_port      = 5011
       path_patterns       = ["/admin", "/admin/*"]
       priority            = 10
-      health_check_path   = "/admin/login/"
     }
     auth = {
       ecr_repository_name = "sq-spec-portal-backend-auth-repos"
@@ -61,7 +59,6 @@ variable "services" {
       container_port    = 5080
       path_patterns     = ["/static", "/static/*"]
       priority          = 30
-      health_check_path = "/"
       command = [
         "/bin/sh",
         "-c",
@@ -147,4 +144,10 @@ variable "github_actions_role_name" {
   description = "Name of the GitHub Actions OIDC role (from dev/github-oidc) that runs `terraform apply` against this module."
   type        = string
   default     = "sq-spec-portal-backend-github-actions-role"
+}
+
+variable "health_check_path" {
+  description = "HTTP path used by the ALB target group health check."
+  type        = string
+  default     = "/health"
 }
