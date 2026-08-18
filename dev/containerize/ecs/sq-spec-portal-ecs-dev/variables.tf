@@ -38,70 +38,71 @@ variable "services" {
     error_message = "Each service must set exactly one of `ecr_repository_name` or `image`."
   }
   default = {
-    admin = {
-      ecr_repository_name = "sq-spec-portal-backend-admin-repos"
-      container_port      = 5011
-      path_patterns       = ["/admin", "/admin/*"]
-      priority            = 10
-    }
+    # admin = {
+    #   ecr_repository_name = "sq-spec-portal-backend-admin-repos"
+    #   container_port      = 5011
+    #   path_patterns       = ["/admin", "/admin/*"]
+    #   priority            = 10
+    # }
     auth = {
       ecr_repository_name = "sq-spec-portal-backend-auth-repos"
       container_port      = 5012
       path_patterns       = ["/auth", "/auth/*"]
       priority            = 20
+      health_check_path   = "/auth/health" # Add a dedicated health check endpoint
     }
     # Public nginx image serving Django static files for the admin service.
     # The command override switches nginx from its default port 80 to 5080 so
     # the ALB target group can reach it; provide the static file content via a
     # bind mount, EFS volume, or a custom image built on top of this base.
-    static = {
-      image             = "nginx:1.25-alpine"
-      container_port    = 5080
-      path_patterns     = ["/static", "/static/*"]
-      priority          = 30
-      command = [
-        "/bin/sh",
-        "-c",
-        "sed -i 's/listen       80;/listen       5080;/g' /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'",
-      ]
-    }
-    spec = {
-      ecr_repository_name = "sq-spec-portal-backend-spec-repos"
-      container_port      = 5013
-      path_patterns       = ["/spec", "/spec/*"]
-      priority            = 40
-    }
-    snapshot = {
-      ecr_repository_name = "sq-spec-portal-backend-snapshot-repos"
-      container_port      = 5014
-      path_patterns       = ["/snapshot", "/snapshot/*"]
-      priority            = 50
-    }
+    # static = {
+    #   image             = "nginx:1.25-alpine"
+    #   container_port    = 5080
+    #   path_patterns     = ["/static", "/static/*"]
+    #   priority          = 30
+    #   command = [
+    #     "/bin/sh",
+    #     "-c",
+    #     "sed -i 's/listen       80;/listen       5080;/g' /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'",
+    #   ]
+    # }
+    # spec = {
+    #   ecr_repository_name = "sq-spec-portal-backend-spec-repos"
+    #   container_port      = 5013
+    #   path_patterns       = ["/spec", "/spec/*"]
+    #   priority            = 40
+    # }
+    # snapshot = {
+    #   ecr_repository_name = "sq-spec-portal-backend-snapshot-repos"
+    #   container_port      = 5014
+    #   path_patterns       = ["/snapshot", "/snapshot/*"]
+    #   priority            = 50
+    # }
   }
 }
 
 variable "task_cpu" {
   description = "Fargate task CPU units per service task. 512 = 0.5 vCPU."
   type        = string
-  default     = "512"
+  default     = "1024"
 }
 
 variable "task_memory" {
   description = "Fargate task memory in MB per service task."
   type        = string
-  default     = "1024"
+  default     = "2048"
 }
 
 variable "app_cpu" {
   description = "CPU units reserved for the Django app container."
   type        = number
-  default     = 512
+  default     = 1024
 }
 
 variable "app_memory" {
   description = "Memory (MB) reserved for the Django app container."
   type        = number
-  default     = 1024
+  default     = 2048
 }
 
 variable "enable_container_insights" {
@@ -149,5 +150,11 @@ variable "github_actions_role_name" {
 variable "health_check_path" {
   description = "HTTP path used by the ALB target group health check."
   type        = string
-  default     = "/health"
+  default     = "/"
+}
+
+variable "alb_log_bucket_name" {
+  description = "Name of the S3 bucket to store ALB access logs."
+  type        = string
+  default     = "sq-spec-portal-backend-elb-log"
 }

@@ -62,6 +62,11 @@ resource "aws_lb" "this" {
   security_groups    = [aws_security_group.alb.id]
   subnets            = module.vpc.public_subnets
 
+  access_logs {
+    bucket  = var.alb_log_bucket_name
+    enabled = true
+  }
+
   tags = {
     Name      = var.service_name
     ManagedBy = "Terraform"
@@ -78,7 +83,7 @@ resource "aws_lb_target_group" "this" {
   vpc_id      = module.vpc.vpc_id
 
   health_check {
-    path                = var.health_check_path
+    path                = lookup(each.value, "health_check_path", var.health_check_path)
     protocol            = "HTTP"
     matcher             = "200-399"
     interval            = 30
