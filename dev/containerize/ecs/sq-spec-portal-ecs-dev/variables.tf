@@ -29,6 +29,7 @@ variable "services" {
     priority            = number
     desired_count       = optional(number, 1)
     environment         = optional(map(string), {})
+    health_check_path   = optional(string)
   }))
   validation {
     condition = alltrue([
@@ -38,34 +39,31 @@ variable "services" {
     error_message = "Each service must set exactly one of `ecr_repository_name` or `image`."
   }
   default = {
-    # admin = {
-    #   ecr_repository_name = "sq-spec-portal-backend-admin-repos"
-    #   container_port      = 5011
-    #   path_patterns       = ["/admin", "/admin/*"]
-    #   priority            = 10
-    # }
-    auth = {
-      ecr_repository_name = "sq-spec-portal-backend-auth-repos"
-      container_port      = 5012
-      path_patterns       = ["/auth", "/auth/*"]
-      priority            = 20
-      health_check_path   = "/auth/health" # Add a dedicated health check endpoint
+    admin = {
+      ecr_repository_name = "sq-spec-portal-backend-admin-repos"
+      container_port      = 5011
+      path_patterns       = ["/admin", "/admin/*"]
+      health_check_path   = "/admin/health"
+      priority            = 10
     }
     # Public nginx image serving Django static files for the admin service.
     # The command override switches nginx from its default port 80 to 5080 so
     # the ALB target group can reach it; provide the static file content via a
     # bind mount, EFS volume, or a custom image built on top of this base.
-    # static = {
-    #   image             = "nginx:1.25-alpine"
-    #   container_port    = 5080
-    #   path_patterns     = ["/static", "/static/*"]
-    #   priority          = 30
-    #   command = [
-    #     "/bin/sh",
-    #     "-c",
-    #     "sed -i 's/listen       80;/listen       5080;/g' /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'",
-    #   ]
+    # auth = {
+    #   ecr_repository_name = "sq-spec-portal-backend-auth-repos"
+    #   container_port      = 5012
+    #   path_patterns       = ["/auth", "/auth/*"]
+    #   priority            = 20
+    #   health_check_path   = "/auth/health" # Add a dedicated health check endpoint
     # }
+    static = {
+      ecr_repository_name = "sq-spec-portal-backend-static-repos"
+      container_port      = 80
+      path_patterns       = ["/static", "/static/*"]
+      priority            = 30
+      health_check_path   = "/"
+    }
     # spec = {
     #   ecr_repository_name = "sq-spec-portal-backend-spec-repos"
     #   container_port      = 5013
@@ -145,12 +143,6 @@ variable "github_actions_role_name" {
   description = "Name of the GitHub Actions OIDC role (from dev/github-oidc) that runs `terraform apply` against this module."
   type        = string
   default     = "sq-spec-portal-backend-github-actions-role"
-}
-
-variable "health_check_path" {
-  description = "HTTP path used by the ALB target group health check."
-  type        = string
-  default     = "/"
 }
 
 variable "alb_log_bucket_name" {

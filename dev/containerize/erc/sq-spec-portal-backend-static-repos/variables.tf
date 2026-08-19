@@ -2,7 +2,7 @@ variable "repository_names" {
   description = "List of ECR static server repositories to provision."
   type        = list(string)
   default = [
-    "sq-spec-portal-backend-static-server-repos",
+    "sq-spec-portal-backend-static-repos",
   ]
 }
 
