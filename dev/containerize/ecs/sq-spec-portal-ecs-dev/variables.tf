@@ -18,89 +18,103 @@ variable "service_name" {
 # fully-qualified reference (e.g. a public Docker Hub image like
 # "nginx:1.25-alpine"). Exactly one of the two must be set.
 variable "services" {
-  description = "Backend services to deploy behind the shared ALB."
+  description = "Backend services to deploy behind the shared ALB. Each service can have multiple containers."
   type = map(object({
+    service_name        = string
+    path_patterns       = list(string)
+    priority            = number
+    desired_count       = optional(number, 1)
+    health_check_path   = optional(string)
     ecr_repository_name = optional(string)
     image               = optional(string)
     image_tag           = optional(string, "latest")
     command             = optional(list(string))
     container_port      = number
-    path_patterns       = list(string)
-    priority            = number
-    desired_count       = optional(number, 1)
     environment         = optional(map(string), {})
-    health_check_path   = optional(string)
+    essential           = optional(bool, true)
+    cpu                 = optional(number)
+    memory              = optional(number)
   }))
   validation {
-    condition = alltrue([
-      for k, s in var.services :
-      (s.ecr_repository_name != null) != (s.image != null)
-    ])
-    error_message = "Each service must set exactly one of `ecr_repository_name` or `image`."
+    condition     = alltrue([for k, s in var.services : (s.ecr_repository_name != null) != (s.image != null)])
+    error_message = "Each container must set exactly one of `ecr_repository_name` or `image`."
   }
   default = {
     admin = {
+      service_name      = "admin"
+      path_patterns     = ["/admin", "/admin/*"]
+      health_check_path = "/admin/health"
+      priority          = 10
       ecr_repository_name = "sq-spec-portal-backend-admin-repos"
-      container_port      = 5011
-      path_patterns       = ["/admin", "/admin/*"]
-      health_check_path   = "/admin/health"
-      priority            = 10
-    }
-    # Public nginx image serving Django static files for the admin service.
-    # The command override switches nginx from its default port 80 to 5080 so
-    # the ALB target group can reach it; provide the static file content via a
-    # bind mount, EFS volume, or a custom image built on top of this base.
-    # auth = {
-    #   ecr_repository_name = "sq-spec-portal-backend-auth-repos"
-    #   container_port      = 5012
-    #   path_patterns       = ["/auth", "/auth/*"]
-    #   priority            = 20
-    #   health_check_path   = "/auth/health" # Add a dedicated health check endpoint
-    # }
+      container_port      = 5011 # Main application container
+      cpu                 = 256 # Main application needs more resources
+      memory              = 512
+    },
     static = {
-      ecr_repository_name = "sq-spec-portal-backend-static-repos"
-      container_port      = 80
-      path_patterns       = ["/static", "/static/*"]
-      priority            = 30
+      service_name        = "admin" # Part of the 'admin' task
+      path_patterns       = ["/static/*"]
       health_check_path   = "/"
+      priority            = 11
+      ecr_repository_name = "sq-spec-portal-backend-static-repos"
+      container_port      = 5080
+      cpu                 = 256 # Static content server needs less CPU
+      memory              = 512 # and memory
+    },
+    auth = {
+      service_name      = "auth"
+      path_patterns     = ["/auth", "/auth/*"]
+      health_check_path = "/auth/health"
+      priority          = 20
+      ecr_repository_name = "sq-spec-portal-backend-auth-repos"
+      container_port      = 5012
+      cpu                 = 512
+      memory              = 1024
+    },
+    spec = {
+      service_name      = "spec"
+      path_patterns     = ["/spec", "/spec/*"]
+      health_check_path = "/spec/health"
+      priority          = 40
+      ecr_repository_name = "sq-spec-portal-backend-spec-repos"
+      container_port      = 5013
+      cpu                 = 512
+      memory              = 1024
+    },
+    snapshot = {
+      service_name      = "snapshot"
+      path_patterns     = ["/snapshot", "/snapshot/*"]
+      health_check_path = "/snapshot/health"
+      priority          = 50
+      ecr_repository_name = "sq-spec-portal-backend-snapshot-repos"
+      container_port      = 5014
+      cpu                 = 512
+      memory              = 1024
     }
-    # spec = {
-    #   ecr_repository_name = "sq-spec-portal-backend-spec-repos"
-    #   container_port      = 5013
-    #   path_patterns       = ["/spec", "/spec/*"]
-    #   priority            = 40
-    # }
-    # snapshot = {
-    #   ecr_repository_name = "sq-spec-portal-backend-snapshot-repos"
-    #   container_port      = 5014
-    #   path_patterns       = ["/snapshot", "/snapshot/*"]
-    #   priority            = 50
-    # }
   }
 }
 
 variable "task_cpu" {
   description = "Fargate task CPU units per service task. 512 = 0.5 vCPU."
-  type        = string
-  default     = "1024"
+  type        = number
+  default     = 2048
 }
 
 variable "task_memory" {
   description = "Fargate task memory in MB per service task."
-  type        = string
-  default     = "2048"
+  type        = number
+  default     = 4096
 }
 
 variable "app_cpu" {
   description = "CPU units reserved for the Django app container."
   type        = number
-  default     = 1024
+  default     = 512
 }
 
 variable "app_memory" {
   description = "Memory (MB) reserved for the Django app container."
   type        = number
-  default     = 2048
+  default     = 1024
 }
 
 variable "enable_container_insights" {

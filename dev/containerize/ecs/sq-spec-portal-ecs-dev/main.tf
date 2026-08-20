@@ -5,8 +5,20 @@ data "aws_ecr_repository" "app" {
   name     = each.value.ecr_repository_name
 }
 
+locals {
+  # Group containers by the service they belong to
+  services_grouped = {
+    for service_name in distinct([for s in var.services : s.service_name]) : service_name => {
+      # Create a list of container objects for this service, including the original key.
+      containers = [
+        for key, container in var.services : merge(container, { original_key = key }) if container.service_name == service_name
+      ]
+    } 
+  }
+}
+
 resource "aws_cloudwatch_log_group" "this" {
-  for_each = var.services
+  for_each = local.services_grouped
 
   name              = "/ecs/${var.service_name}-${each.key}"
   retention_in_days = var.log_retention_in_days
@@ -45,35 +57,35 @@ resource "aws_ecs_cluster_capacity_providers" "this" {
 # One task definition per Django service. Each task runs a single `app`
 # container that receives traffic directly from the ALB target group.
 resource "aws_ecs_task_definition" "this" {
-  for_each = var.services
+  for_each = local.services_grouped
 
   family                   = "${var.service_name}-${each.key}"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = var.task_cpu
-  memory                   = var.task_memory
+  cpu                      = tostring(var.task_cpu)
+  memory                   = tostring(var.task_memory)
   execution_role_arn       = aws_iam_role.task_execution_role.arn
   task_role_arn            = aws_iam_role.task_role.arn
 
   container_definitions = jsonencode([
-    merge(
+    for c in each.value.containers : merge(
       {
-        name      = "${var.service_name}-${each.key}"
-        image     = each.value.image != null ? each.value.image : "${data.aws_ecr_repository.app[each.key].repository_url}:${each.value.image_tag}"
-        essential = true
-        cpu       = var.app_cpu
-        memory    = var.app_memory
+        name      = c.original_key
+        image     = c.image != null ? c.image : "${data.aws_ecr_repository.app[c.original_key].repository_url}:${c.image_tag}"
+        essential = c.essential
+        cpu       = c.cpu != null ? c.cpu : var.app_cpu # Note: cpu and memory are now required in variables.tf
+        memory    = c.memory != null ? c.memory : var.app_memory
 
         portMappings = [
           {
-            containerPort = each.value.container_port
-            hostPort      = each.value.container_port
+            containerPort = c.container_port
+            hostPort      = c.container_port
             protocol      = "tcp"
           }
         ]
 
         environment = [
-          for k, v in each.value.environment : {
+          for k, v in c.environment : {
             name  = k
             value = v
           }
@@ -82,13 +94,14 @@ resource "aws_ecs_task_definition" "this" {
         logConfiguration = {
           logDriver = "awslogs"
           options = {
+            # Assuming one log group per service, but you could create one per container if needed
             awslogs-group         = aws_cloudwatch_log_group.this[each.key].name
-            awslogs-region        = var.aws_region
-            awslogs-stream-prefix = "app"
+            awslogs-region        = var.aws_region # us-east-1
+            awslogs-stream-prefix = c.original_key
           }
         }
       },
-      each.value.command != null ? { command = each.value.command } : {}
+      c.command != null ? { command = c.command } : {}
     )
   ])
 
@@ -99,12 +112,12 @@ resource "aws_ecs_task_definition" "this" {
 }
 
 resource "aws_ecs_service" "this" {
-  for_each = var.services
+  for_each = local.services_grouped
 
   name            = "${var.service_name}-${each.key}"
   cluster         = aws_ecs_cluster.this.id
   task_definition = aws_ecs_task_definition.this[each.key].arn
-  desired_count   = each.value.desired_count
+  desired_count   = each.value.containers[0].desired_count
 
   capacity_provider_strategy {
     capacity_provider = var.use_fargate_spot ? "FARGATE_SPOT" : "FARGATE"
@@ -118,10 +131,13 @@ resource "aws_ecs_service" "this" {
     assign_public_ip = var.assign_public_ip
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.this[each.key].arn
-    container_name   = "${var.service_name}-${each.key}"
-    container_port   = each.value.container_port
+  dynamic "load_balancer" {
+    for_each = { for c in each.value.containers : c.container_port => c }
+    content {
+      target_group_arn = aws_lb_target_group.this[load_balancer.value.original_key].arn
+      container_name   = load_balancer.value.original_key
+      container_port   = load_balancer.value.container_port
+    }
   }
 
   deployment_minimum_healthy_percent = 100

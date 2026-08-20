@@ -30,12 +30,13 @@ resource "aws_security_group" "service" {
   description = "Allow the ALB to reach the app container on each service port."
   vpc_id      = module.vpc.vpc_id
 
+  # Create a flattened map of all container ports across all services
   dynamic "ingress" {
-    for_each = { for k, s in var.services : tostring(s.container_port) => s.container_port... }
+    for_each = var.services
     content {
-      description     = "App container port ${ingress.key} from ALB"
-      from_port       = tonumber(ingress.key)
-      to_port         = tonumber(ingress.key)
+      description     = "App container port ${ingress.value.container_port} from ALB for ${ingress.key}"
+      from_port       = ingress.value.container_port
+      to_port         = ingress.value.container_port
       protocol        = "tcp"
       security_groups = [aws_security_group.alb.id]
     }
@@ -91,7 +92,7 @@ resource "aws_lb_target_group" "this" {
   vpc_id      = module.vpc.vpc_id
 
   health_check {
-    path                = lookup(each.value, "health_check_path", var.health_check_path)
+    path                = lookup(each.value, "health_check_path", "/health")
     protocol            = "HTTP"
     matcher             = "200-399"
     interval            = 30
