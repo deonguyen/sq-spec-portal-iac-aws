@@ -7,13 +7,13 @@ variable "aws_region" {
 variable "service_name" {
   description = "The name of the ECS service (also used as the cluster and log group prefix)."
   type        = string
-  default     = "snapshot-ecs"
+  default     = "sq-spec-portal-frontend"
 }
 
 variable "ecr_repository_name" {
-  description = "The name of the ECR repository holding the Django application image."
+  description = "The name of the ECR repository holding the Next.js application image."
   type        = string
-  default     = "sq-spec-portal-backend-snapshot-repos"
+  default     = "sq-spec-portal-frontend-repos"
 }
 
 variable "image_tag" {
@@ -23,9 +23,9 @@ variable "image_tag" {
 }
 
 variable "container_port" {
-  description = "The port the Django container listens on."
+  description = "The port the Next.js container listens on."
   type        = number
-  default     = 5014
+  default     = 3000
 }
 
 variable "cpu" {
@@ -41,7 +41,7 @@ variable "memory" {
 }
 
 variable "desired_count" {
-  description = "Desired number of ECS tasks running the Django app."
+  description = "Desired number of ECS tasks running the Next.js app."
   type        = number
   default     = 1
 }
@@ -59,7 +59,7 @@ variable "use_fargate_spot" {
 }
 
 variable "runtime_environment_variables" {
-  description = "Environment variables passed to the Django container at runtime."
+  description = "Environment variables passed to the Next.js container at runtime."
   type        = map(string)
   default     = {}
 }
@@ -67,23 +67,23 @@ variable "runtime_environment_variables" {
 variable "health_check_path" {
   description = "HTTP path used by the ALB target group health check."
   type        = string
-  default     = "/health"
+  default     = "/"
 }
 
 variable "vpc_cidr" {
   description = "CIDR block for the VPC created for the ECS service."
   type        = string
-  default     = "10.10.0.0/16"
+  default     = "10.30.0.0/16"
 }
 
 variable "public_subnets" {
   description = "CIDR blocks for the public subnets (ALB + Fargate tasks with public IP)."
   type        = list(string)
-  default     = ["10.10.101.0/24", "10.10.102.0/24"]
+  default     = ["10.30.101.0/24", "10.30.102.0/24"]
 }
 
 variable "log_retention_in_days" {
-  description = "CloudWatch log retention (in days) for the Django task logs. Small value keeps storage cost near zero."
+  description = "CloudWatch log retention (in days) for the Next.js task logs. Small value keeps storage cost near zero."
   type        = number
   default     = 7
 }
@@ -97,5 +97,5 @@ variable "assign_public_ip" {
 variable "github_actions_role_name" {
   description = "Name of the GitHub Actions OIDC role (from dev/github-oidc) that runs `terraform apply` against this module. Kept as a name (not ARN) so we can attach a policy in-place without needing a data source."
   type        = string
-  default     = "sq-spec-portal-backend-github-actions-role"
+  default     = "sq-spec-portal-frontend-github-actions-role" # Assumes a new role for the frontend
 }

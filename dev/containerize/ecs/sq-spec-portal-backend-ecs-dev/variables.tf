@@ -50,19 +50,19 @@ variable "services" {
     # The command override switches nginx from its default port 80 to 5080 so
     # the ALB target group can reach it; provide the static file content via a
     # bind mount, EFS volume, or a custom image built on top of this base.
-    # auth = {
-    #   ecr_repository_name = "sq-spec-portal-backend-auth-repos"
-    #   container_port      = 5012
-    #   path_patterns       = ["/auth", "/auth/*"]
-    #   priority            = 20
-    #   health_check_path   = "/auth/health" # Add a dedicated health check endpoint
-    # }
     static = {
       ecr_repository_name = "sq-spec-portal-backend-static-repos"
       container_port      = 80
       path_patterns       = ["/static", "/static/*"]
       priority            = 30
       health_check_path   = "/"
+    }
+    auth = {
+      ecr_repository_name = "sq-spec-portal-backend-auth-repos"
+      container_port      = 5012
+      path_patterns       = ["/auth", "/auth/*"]
+      priority            = 20
+      health_check_path   = "/auth/health" # Add a dedicated health check endpoint
     }
     # spec = {
     #   ecr_repository_name = "sq-spec-portal-backend-spec-repos"
