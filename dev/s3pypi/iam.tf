@@ -1,4 +1,8 @@
 # Create an IAM user for uploading packages to the S3 bucket.
+data "aws_s3_bucket" "pypi_bucket" {
+  bucket = var.bucket_name
+}
+
 resource "aws_iam_user" "pypi_uploader" {
   name = var.iam_user_name
   path = "/system/"

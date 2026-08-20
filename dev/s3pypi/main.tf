@@ -31,41 +31,6 @@ resource "aws_s3_bucket_versioning" "pypi_bucket_versioning" {
   }
 }
 
-# Create an IAM user for uploading packages to the S3 bucket.
-resource "aws_iam_user" "pypi_uploader" {
-  name = var.iam_user_name
-  path = "/system/"
-}
-
-# Generate access keys for the IAM user.
-# These keys will be used to configure your local environment for publishing.
-resource "aws_iam_access_key" "pypi_uploader_keys" {
-  user = aws_iam_user.pypi_uploader.name
-}
-
-# Define an IAM policy that grants the necessary permissions for s3pypi.
-data "aws_iam_policy_document" "pypi_policy_doc" {
-  statement {
-    actions = [
-      "s3:ListBucket",
-      "s3:GetObject",
-      "s3:PutObject",
-      "s3:DeleteObject"
-    ]
-    resources = [
-      aws_s3_bucket.pypi_bucket.arn,
-      "${aws_s3_bucket.pypi_bucket.arn}/*",
-    ]
-  }
-}
-
-# Attach the policy to the IAM user.
-resource "aws_iam_user_policy" "pypi_policy_attachment" {
-  name   = "s3pypi-policy"
-  user   = aws_iam_user.pypi_uploader.name
-  policy = data.aws_iam_policy_document.pypi_policy_doc.json
-}
-
 # Create a CloudFront Origin Access Control (OAC)
 resource "aws_cloudfront_origin_access_control" "pypi_oac" {
   name                              = "${var.bucket_name}-oac"
@@ -73,30 +38,6 @@ resource "aws_cloudfront_origin_access_control" "pypi_oac" {
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
-}
-
-# Add a bucket policy to allow CloudFront to get objects
-resource "aws_s3_bucket_policy" "pypi_bucket_policy" {
-  bucket = aws_s3_bucket.pypi_bucket.id
-  policy = data.aws_iam_policy_document.cloudfront_policy_doc.json
-}
-
-data "aws_iam_policy_document" "cloudfront_policy_doc" {
-  statement {
-    actions   = ["s3:GetObject"]
-    resources = ["${aws_s3_bucket.pypi_bucket.arn}/*"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["cloudfront.amazonaws.com"]
-    }
-
-    condition {
-      test     = "StringEquals"
-      variable = "AWS:SourceArn"
-      values   = [aws_cloudfront_distribution.pypi_distribution.arn]
-    }
-  }
 }
 
 # Create a CloudFront distribution to serve the packages.

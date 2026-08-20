@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "bucket_name" {
   description = "The name of the S3 bucket for the PyPI server. Must be globally unique."
   type        = string
-  default     = "sq-spec-portal-backend-pypi-pkgs"
+  default     = "sq-spec-portal-backend-pypi-packages"
 }
 
 variable "iam_user_name" {
