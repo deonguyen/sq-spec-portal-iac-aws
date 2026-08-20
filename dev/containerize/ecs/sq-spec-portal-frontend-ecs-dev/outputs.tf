@@ -19,7 +19,7 @@ output "service_arn" {
 }
 
 output "task_definition_arn" {
-  description = "The ARN of the ECS task definition running the Django app."
+  description = "The ARN of the ECS task definition running the Next.js app."
   value       = aws_ecs_task_definition.this.arn
 }
 
@@ -29,21 +29,21 @@ output "task_execution_role_arn" {
 }
 
 output "task_role_arn" {
-  description = "ARN of the IAM role assumed by the Django container at runtime."
+  description = "ARN of the IAM role assumed by the Next.js container at runtime."
   value       = aws_iam_role.task_role.arn
 }
 
 output "alb_dns_name" {
-  description = "Public DNS name of the ALB fronting the Django app."
+  description = "Public DNS name of the ALB fronting the Next.js app."
   value       = aws_lb.this.dns_name
 }
 
 output "app_url" {
-  description = "Public HTTP URL of the Django app served via the ALB."
+  description = "Public HTTP URL of the Next.js app served via the ALB."
   value       = "http://${aws_lb.this.dns_name}"
 }
 
 output "log_group_name" {
-  description = "CloudWatch log group receiving Django container logs."
+  description = "CloudWatch log group receiving Next.js container logs."
   value       = aws_cloudwatch_log_group.this.name
 }

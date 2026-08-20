@@ -21,7 +21,7 @@ resource "aws_iam_role_policy_attachment" "task_execution_role_policy" {
   role       = aws_iam_role.task_execution_role.name
 }
 
-# IAM role assumed by the running Django container. Attach app-specific policies here (S3, SQS, Secrets Manager, etc.).
+# IAM role assumed by the running Next.js container. Attach app-specific policies here (e.g. for S3, etc.).
 resource "aws_iam_role" "task_role" {
   name = "${var.service_name}-task-role"
 
@@ -39,11 +39,7 @@ resource "aws_iam_role" "task_role" {
   })
 }
 
-# Grant the GitHub Actions OIDC role permission to run `terraform apply` against
-# this module. Covers every AWS resource created here (ECS, ALB, VPC, IAM, logs)
-# plus the S3/DynamoDB state backend. The role itself is defined in
-# dev/github-oidc; we attach the policy by role name so this module stays
-# self-contained.
+# Grant the GitHub Actions OIDC role permission to run `terraform apply` against this module.
 data "aws_iam_policy_document" "github_actions_ecs_manage" {
   statement {
     sid    = "EcsManage"
@@ -133,24 +129,7 @@ data "aws_iam_policy_document" "github_actions_ecs_manage" {
     }
   }
 
-  statement {
-    sid    = "TerraformStateBucket"
-    effect = "Allow"
-    actions = [
-      "s3:ListBucket",
-      "s3:GetBucketVersioning",
-      "s3:GetObject",
-      "s3:PutObject",
-      "s3:DeleteObject",
-    ]
-    resources = [
-      "arn:aws:s3:::dev-sq-cc-projects-tfstate",
-      "arn:aws:s3:::dev-sq-cc-projects-tfstate/*",
-    ]
-  }
-
-  # ECR docker login. GetAuthorizationToken is account-wide by AWS design and
-  # cannot be scoped to a specific repository ARN.
+  # ECR docker login.
   statement {
     sid    = "EcrAuth"
     effect = "Allow"
