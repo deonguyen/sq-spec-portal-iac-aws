@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "service_name" {
   description = "Common prefix for the ECS cluster, log groups, ALB, IAM roles, and service names."
   type        = string
-  default     = "sq-spec-portal-ecs"
+  default     = "sq-spec-portal-backend-ecs-dev"
 }
 
 # Each entry defines one backend deployed behind the shared ALB.
