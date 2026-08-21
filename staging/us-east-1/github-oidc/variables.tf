@@ -16,18 +16,6 @@ variable "backend_bucket" {
   default     = "sq-spec-portal-tfstate" # TODO: update with your S3 bucket name
 }
 
-variable "github_org" {
-  description = "The GitHub organization."
-  type        = string
-  default     = "deonguyen" # TODO: update with your GitHub organization
-}
-
-variable "github_repo" {
-  description = "The GitHub repository."
-  type        = string
-  default     = "sq-spec-portal-backend" # TODO: update with your GitHub repository
-}
-
 variable "allowed_github_subs" {
   description = "A list of GitHub OIDC `sub` claim patterns allowed to assume the role (e.g. `repo:org/repo:ref:refs/heads/main`, `repo:org/repo:environment:production`). Must be scoped — full wildcards like `repo:org/repo:*` are rejected by account SCP."
   type        = list(string)
@@ -53,25 +41,31 @@ variable "allowed_ecr_repository_arns" {
   description = "A list of ECR repository ARNs GitHub Actions is allowed to build and push to."
   type        = list(string)
   default = [
-    # "arn:aws:ecr:${var.aws_region}:${var.aws_account_id}:repository/sq-spec-portal-backend-admin-repos-staging",
-    # "arn:aws:ecr:${var.aws_region}:${var.aws_account_id}:repository/sq-spec-portal-backend-auth-repos-staging",
-    # "arn:aws:ecr:${var.aws_region}:${var.aws_account_id}:repository/sq-spec-portal-backend-spec-repos-staging",
-    # "arn:aws:ecr:${var.aws_region}:${var.aws_account_id}:repository/sq-spec-portal-backend-snapshot-repos-staging",
-    # "arn:aws:ecr:${var.aws_region}:${var.aws_account_id}:repository/sq-spec-portal-backend-static-repos-staging"
+    "arn:aws:ecr:us-east-1:885388406688:repository/sq-spec-portal-backend-admin-repos-staging",
+    "arn:aws:ecr:us-east-1:885388406688:repository/sq-spec-portal-backend-auth-repos-staging",
+    "arn:aws:ecr:us-east-1:885388406688:repository/sq-spec-portal-backend-spec-repos-staging",
+    "arn:aws:ecr:us-east-1:885388406688:repository/sq-spec-portal-backend-snapshot-repos-staging",
+    "arn:aws:ecr:us-east-1:885388406688:repository/sq-spec-portal-backend-static-repos-staging",
+    "arn:aws:ecr:us-east-1:885388406688:repository/sq-spec-portal-frontend-repos-staging",
   ]
 }
 
 variable "allowed_eks_cluster_arns" {
   description = "A list of EKS cluster ARNs GitHub Actions is allowed to describe (needed for `aws eks update-kubeconfig`). NOTE: cluster-side access (aws-auth ConfigMap or EKS access entries) must be configured separately."
   type        = list(string)
-  default     = []
+  default     = [
+    "arn:aws:eks:us-east-1:885388406688:cluster/backend-cluster-staging",
+    "arn:aws:eks:us-east-1:885388406688:cluster/frontend-cluster-staging",
+  ]
 }
 
 variable "allowed_pass_role_arns" {
   description = "IAM role ARNs GitHub Actions can pass (iam:PassRole) to ecs-tasks.amazonaws.com. Required for `RegisterTaskDefinition` to reference a task role and execution role."
   type        = list(string)
   default = [
-    # "arn:aws:iam::${local.aws_account_id}:role/sq-spec-portal-backend-ecs-task-role-staging",
-    # "arn:aws:iam::${local.aws_account_id}:role/sq-spec-portal-backend-ecs-task-execution-role-staging",
+    "arn:aws:iam::885388406688:role/sq-spec-portal-backend-ecs-task-role-staging",
+    "arn:aws:iam::885388406688:role/sq-spec-portal-backend-ecs-task-execution-role-staging",
+    "arn:aws:iam::885388406688:role/sq-spec-portal-frontend-ecs-task-role-staging",
+    "arn:aws:iam::885388406688:role/sq-spec-portal-frontend-ecs-task-execution-role-staging",
   ]
 }
