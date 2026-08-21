@@ -59,7 +59,7 @@ variable "services" {
     static = {
       service_name        = "admin" # Part of the 'admin' task
       path_patterns       = ["/static/*"]
-      health_check_path   = "/"
+      health_check_path   = "/health/"
       priority            = 11
       ecr_repository_name = "sq-spec-portal-backend-static-repos-staging"
       container_port      = 5080
