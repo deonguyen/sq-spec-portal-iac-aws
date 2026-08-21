@@ -58,7 +58,7 @@ variable "allowed_pass_role_arns" {
   description = "IAM role ARNs GitHub Actions can pass (iam:PassRole) to ecs-tasks.amazonaws.com. Required for `RegisterTaskDefinition` to reference a task role and execution role."
   type        = list(string)
   default = [
-    "arn:aws:iam::${local.aws_account_id}:role/sq-spec-portal-staging-ecs-task-role",
-    "arn:aws:iam::${local.aws_account_id}:role/sq-spec-portal-staging-ecs-task-execution-role",
+    "arn:aws:iam::${local.aws_account_id}:role/sq-spec-portal-staging-ecs-task-role-staging",
+    "arn:aws:iam::${local.aws_account_id}:role/sq-spec-portal-staging-ecs-task-execution-role-staging",
   ]
 }

@@ -13,7 +13,7 @@ module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 5.0"
 
-  name = "${var.service_name}-vpc"
+  name = "frontend-vpc-staging"
   cidr = var.vpc_cidr
 
   azs             = ["${var.aws_region}a", "${var.aws_region}b"]
@@ -24,7 +24,7 @@ module "vpc" {
 
 # Security group for the ALB to allow public inbound HTTP traffic.
 resource "aws_security_group" "alb" {
-  name        = "${var.service_name}-alb-sg"
+  name        = "frontend-alb-sg-staging"
   description = "Allow HTTP inbound traffic"
   vpc_id      = module.vpc.vpc_id
 
@@ -45,7 +45,7 @@ resource "aws_security_group" "alb" {
 
 # Security group for the Fargate tasks. Allows inbound from the ALB.
 resource "aws_security_group" "ecs_task" {
-  name        = "${var.service_name}-task-sg"
+  name        = "sq-spec-portal-frontend-ecs-task-sg-staging"
   description = "Allow ALB to connect to the Next.js container"
   vpc_id      = module.vpc.vpc_id
 
@@ -66,7 +66,7 @@ resource "aws_security_group" "ecs_task" {
 
 # ALB, target group, and listener to route traffic to the service.
 resource "aws_lb" "this" {
-  name               = "${var.service_name}-alb"
+  name               = "frontend-alb-staging"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
@@ -74,7 +74,7 @@ resource "aws_lb" "this" {
 }
 
 resource "aws_lb_target_group" "this" {
-  name        = "${var.service_name}-tg"
+  name        = "frontend-tg-staging"
   port        = var.container_port
   protocol    = "HTTP"
   vpc_id      = module.vpc.vpc_id
@@ -104,7 +104,7 @@ resource "aws_lb_listener" "http" {
 
 # ECS cluster, task definition, and service.
 resource "aws_ecs_cluster" "this" {
-  name = "${var.service_name}-cluster"
+  name = var.ecs_cluster_name
 
   setting {
     name  = "containerInsights"
@@ -113,12 +113,12 @@ resource "aws_ecs_cluster" "this" {
 }
 
 resource "aws_cloudwatch_log_group" "this" {
-  name              = "/ecs/${var.service_name}"
+  name              = "/ecs/sq-spec-portal-frontend-ecs-log-group-staging"
   retention_in_days = var.log_retention_in_days
 }
 
 resource "aws_ecs_task_definition" "this" {
-  family                   = var.service_name
+  family                   = var.ecs_task_definition_name
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.cpu
@@ -128,7 +128,7 @@ resource "aws_ecs_task_definition" "this" {
 
   container_definitions = jsonencode([
     {
-      name      = var.service_name
+      name      = var.container_name
       image     = "${data.aws_ecr_repository.app.repository_url}:${var.image_tag}"
       cpu       = tonumber(var.cpu)
       memory    = tonumber(var.memory)
@@ -158,11 +158,10 @@ resource "aws_ecs_task_definition" "this" {
 }
 
 resource "aws_ecs_service" "this" {
-  name            = var.service_name
+  name            = var.ecs_service_name
   cluster         = aws_ecs_cluster.this.id
   task_definition = aws_ecs_task_definition.this.arn
   desired_count   = var.desired_count
-  launch_type     = "FARGATE"
 
   network_configuration {
     subnets         = module.vpc.public_subnets
@@ -172,7 +171,7 @@ resource "aws_ecs_service" "this" {
 
   load_balancer {
     target_group_arn = aws_lb_target_group.this.arn
-    container_name   = var.service_name
+    container_name   = var.container_name
     container_port   = var.container_port
   }
 

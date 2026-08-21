@@ -97,5 +97,5 @@ variable "assign_public_ip" {
 variable "github_actions_role_name" {
   description = "Name of the GitHub Actions OIDC role (from staging/github-oidc) that runs `terraform apply` against this module. Kept as a name (not ARN) so we can attach a policy in-place without needing a data source."
   type        = string
-  default     = "sq-spec-portal-frontend-staging-github-actions-role"
+  default     = "sq-spec-portal-github-actions-role-staging"
 }

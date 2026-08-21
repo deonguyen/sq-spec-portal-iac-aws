@@ -4,7 +4,7 @@ module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.1.1"
 
-  name = "${var.service_name}-vpc"
+  name = "sq-spec-portal-backend-vpc-staging"
   cidr = var.vpc_cidr
 
   azs            = slice(data.aws_availability_zones.available.names, 0, 2)
@@ -14,7 +14,7 @@ module "vpc" {
   enable_dns_support   = true
 
   tags = {
-    Name      = "${var.service_name}-vpc"
+    Name      = "sq-spec-portal-backend-vpc-staging"
     ManagedBy = "Terraform"
   }
 }

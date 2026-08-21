@@ -4,6 +4,12 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
+variable "ecs_cluster_name" {
+  description = "The name of the ECS cluster."
+  type        = string
+  default     = "backend-cluster-staging"
+}
+
 variable "service_name" {
   description = "Common prefix for the ECS cluster, log groups, ALB, IAM roles, and service names."
   type        = string
@@ -45,7 +51,7 @@ variable "services" {
       path_patterns     = ["/admin", "/admin/*"]
       health_check_path = "/admin/health"
       priority          = 10
-      ecr_repository_name = "sq-spec-portal-backend-admin-repos"
+      ecr_repository_name = "sq-spec-portal-backend-admin-repos-staging"
       container_port      = 5011 # Main application container
       cpu                 = 256 # Main application needs more resources
       memory              = 512
@@ -55,7 +61,7 @@ variable "services" {
       path_patterns       = ["/static/*"]
       health_check_path   = "/"
       priority            = 11
-      ecr_repository_name = "sq-spec-portal-backend-static-repos"
+      ecr_repository_name = "sq-spec-portal-backend-static-repos-staging"
       container_port      = 5080
       cpu                 = 256 # Static content server needs less CPU
       memory              = 512 # and memory
@@ -65,7 +71,7 @@ variable "services" {
       path_patterns     = ["/auth", "/auth/*"]
       health_check_path = "/auth/health"
       priority          = 20
-      ecr_repository_name = "sq-spec-portal-backend-auth-repos"
+      ecr_repository_name = "sq-spec-portal-backend-auth-repos-staging"
       container_port      = 5012
       cpu                 = 512
       memory              = 1024
@@ -75,7 +81,7 @@ variable "services" {
       path_patterns     = ["/spec", "/spec/*"]
       health_check_path = "/spec/health"
       priority          = 40
-      ecr_repository_name = "sq-spec-portal-backend-spec-repos"
+      ecr_repository_name = "sq-spec-portal-backend-spec-repos-staging"
       container_port      = 5013
       cpu                 = 512
       memory              = 1024
@@ -85,7 +91,7 @@ variable "services" {
       path_patterns     = ["/snapshot", "/snapshot/*"]
       health_check_path = "/snapshot/health"
       priority          = 50
-      ecr_repository_name = "sq-spec-portal-backend-snapshot-repos"
+      ecr_repository_name = "sq-spec-portal-backend-snapshot-repos-staging"
       container_port      = 5014
       cpu                 = 512
       memory              = 1024
@@ -156,11 +162,11 @@ variable "assign_public_ip" {
 variable "github_actions_role_name" {
   description = "Name of the GitHub Actions OIDC role (from staging/github-oidc) that runs `terraform apply` against this module."
   type        = string
-  default     = "sq-spec-portal-backend-github-actions-role"
+  default     = "sq-spec-portal-github-actions-role-staging"
 }
 
 variable "alb_log_bucket_name" {
   description = "Name of the S3 bucket to store ALB access logs."
   type        = string
-  default     = "sq-spec-portal-backend-elb-log"
+  default     = "sq-spec-portal-backend-elb-log-staging"
 }

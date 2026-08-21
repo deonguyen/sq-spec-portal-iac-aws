@@ -20,17 +20,17 @@ locals {
 resource "aws_cloudwatch_log_group" "this" {
   for_each = local.services_grouped
 
-  name              = "/ecs/${var.service_name}-${each.key}"
+  name              = "/ecs/sq-spec-portal-backend-${each.key}-log-group-staging"
   retention_in_days = var.log_retention_in_days
 
   tags = {
-    Name      = "${var.service_name}-${each.key}"
+    Name      = "sq-spec-portal-backend-${each.key}-log-group-staging"
     ManagedBy = "Terraform"
   }
 }
 
 resource "aws_ecs_cluster" "this" {
-  name = var.service_name
+  name = var.ecs_cluster_name
 
   setting {
     name  = "containerInsights"
@@ -59,7 +59,7 @@ resource "aws_ecs_cluster_capacity_providers" "this" {
 resource "aws_ecs_task_definition" "this" {
   for_each = local.services_grouped
 
-  family                   = "${var.service_name}-${each.key}"
+  family                   = "backend-service-${each.key}-staging"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = tostring(var.task_cpu)
@@ -70,7 +70,7 @@ resource "aws_ecs_task_definition" "this" {
   container_definitions = jsonencode([
     for c in each.value.containers : merge(
       {
-        name      = c.original_key
+        name      = "backend-container-${c.original_key}-staging"
         image     = c.image != null ? c.image : "${data.aws_ecr_repository.app[c.original_key].repository_url}:${c.image_tag}"
         essential = c.essential
         cpu       = c.cpu != null ? c.cpu : var.app_cpu # Note: cpu and memory are now required in variables.tf
@@ -106,7 +106,7 @@ resource "aws_ecs_task_definition" "this" {
   ])
 
   tags = {
-    Name      = "${var.service_name}-${each.key}"
+    Name      = "backend-service-${each.key}-staging"
     ManagedBy = "Terraform"
   }
 }
@@ -114,7 +114,7 @@ resource "aws_ecs_task_definition" "this" {
 resource "aws_ecs_service" "this" {
   for_each = local.services_grouped
 
-  name            = "${var.service_name}-${each.key}"
+  name            = "backend-service-${each.key}-staging"
   cluster         = aws_ecs_cluster.this.id
   task_definition = aws_ecs_task_definition.this[each.key].arn
   desired_count   = each.value.containers[0].desired_count
@@ -135,7 +135,7 @@ resource "aws_ecs_service" "this" {
     for_each = { for c in each.value.containers : c.container_port => c }
     content {
       target_group_arn = aws_lb_target_group.this[load_balancer.value.original_key].arn
-      container_name   = load_balancer.value.original_key
+      container_name   = "backend-container-${load_balancer.value.original_key}-staging"
       container_port   = load_balancer.value.container_port
     }
   }
@@ -150,7 +150,7 @@ resource "aws_ecs_service" "this" {
   ]
 
   tags = {
-    Name      = "${var.service_name}-${each.key}"
+    Name      = "backend-service-${each.key}-staging"
     ManagedBy = "Terraform"
   }
 }

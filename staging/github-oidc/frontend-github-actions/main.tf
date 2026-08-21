@@ -37,7 +37,7 @@ data "aws_iam_policy_document" "github_actions_assume_role_policy" {
 }
 
 resource "aws_iam_role" "github_actions_role" {
-  name               = "${var.github_repo}-github-actions-role"
+  name               = "sq-spec-portal-github-actions-role-staging"
   assume_role_policy = data.aws_iam_policy_document.github_actions_assume_role_policy.json
   description        = "IAM role for GitHub Actions to assume"
 }

@@ -1,5 +1,5 @@
 resource "aws_security_group" "alb" {
-  name        = "${var.service_name}-alb-sg"
+  name        = "backend-alb-sg-staging"
   description = "Allow public HTTP traffic to the ALB gateway."
   vpc_id      = module.vpc.vpc_id
 
@@ -20,13 +20,13 @@ resource "aws_security_group" "alb" {
   }
 
   tags = {
-    Name      = "${var.service_name}-alb-sg"
+    Name      = "backend-alb-sg-staging"
     ManagedBy = "Terraform"
   }
 }
 
 resource "aws_security_group" "service" {
-  name        = "${var.service_name}-svc-sg"
+  name        = "backend-svc-sg-staging"
   description = "Allow the ALB to reach the app container on each service port."
   vpc_id      = module.vpc.vpc_id
 
@@ -59,25 +59,25 @@ resource "aws_security_group" "service" {
   }
 
   tags = {
-    Name      = "${var.service_name}-svc-sg"
+    Name      = "backend-svc-sg-staging"
     ManagedBy = "Terraform"
   }
 }
 
 resource "aws_lb" "this" {
-  name               = substr(var.service_name, 0, 32)
+  name               = "backend-alb-staging"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
   subnets            = module.vpc.public_subnets
 
-  access_logs {
-    bucket  = var.alb_log_bucket_name
-    enabled = true
-  }
+  # access_logs {
+  #   bucket  = var.alb_log_bucket_name
+  #   enabled = true
+  # }
 
   tags = {
-    Name      = var.service_name
+    Name      = "backend-alb-staging"
     ManagedBy = "Terraform"
   }
 }
@@ -85,7 +85,7 @@ resource "aws_lb" "this" {
 resource "aws_lb_target_group" "this" {
   for_each = var.services
 
-  name        = substr("${var.service_name}-${each.key}-tg", 0, 32)
+  name        = substr("backend-${each.key}-tg-staging", 0, 32)
   port        = each.value.container_port
   protocol    = "HTTP"
   target_type = "ip"
@@ -102,7 +102,7 @@ resource "aws_lb_target_group" "this" {
   }
 
   tags = {
-    Name      = "${var.service_name}-${each.key}-tg"
+    Name      = "backend-${each.key}-tg-staging"
     ManagedBy = "Terraform"
   }
 }
@@ -142,7 +142,7 @@ resource "aws_lb_listener_rule" "path" {
   }
 
   tags = {
-    Name      = "${var.service_name}-${each.key}-rule"
+    Name      = "backend-${each.key}-rule-staging"
     ManagedBy = "Terraform"
   }
 }

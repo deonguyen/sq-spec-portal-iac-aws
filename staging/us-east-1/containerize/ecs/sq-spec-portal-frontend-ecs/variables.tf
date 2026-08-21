@@ -4,16 +4,34 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
-variable "service_name" {
+variable "ecs_cluster_name" {
+  description = "The name of the ECS cluster."
+  type        = string
+  default     = "frontend-cluster-staging"
+}
+
+variable "ecs_service_name" {
   description = "The name of the ECS service (also used as the cluster and log group prefix)."
   type        = string
-  default     = "sq-spec-portal-frontend-staging"
+  default     = "frontend-service-staging"
+}
+
+variable "ecs_log_group_name" {
+  description = "The name of the ECS log group (also used as the cluster and service prefix)."
+  type        = string
+  default     = "frontend-log-group-staging"
+}
+
+variable "ecs_task_definition_name" {
+  description = "The name of the ECS task definition."
+  type        = string
+  default     = "frontend-task-definition-staging"
 }
 
 variable "ecr_repository_name" {
   description = "The name of the ECR repository holding the Next.js application image."
   type        = string
-  default     = "sq-spec-portal-frontend-staging-repos"
+  default     = "sq-spec-portal-frontend-repos-staging"
 }
 
 variable "image_tag" {
@@ -22,10 +40,16 @@ variable "image_tag" {
   default     = "latest"
 }
 
+variable "container_name" {
+  description = "The name of the Next.js container."
+  type        = string
+  default     = "frontend-container-staging"
+}
+
 variable "container_port" {
   description = "The port the Next.js container listens on."
   type        = number
-  default     = 3000
+  default     = 3002
 }
 
 variable "cpu" {
@@ -67,7 +91,7 @@ variable "runtime_environment_variables" {
 variable "health_check_path" {
   description = "HTTP path used by the ALB target group health check."
   type        = string
-  default     = "/"
+  default     = "/health"
 }
 
 variable "vpc_cidr" {
@@ -97,5 +121,5 @@ variable "assign_public_ip" {
 variable "github_actions_role_name" {
   description = "Name of the GitHub Actions OIDC role (from staging/github-oidc) that runs `terraform apply` against this module. Kept as a name (not ARN) so we can attach a policy in-place without needing a data source."
   type        = string
-  default     = "sq-spec-portal-frontend-staging-github-actions-role"
+  default     = "sq-spec-portal-github-actions-role-staging"
 }
