@@ -94,18 +94,6 @@ variable "health_check_path" {
   default     = "/health"
 }
 
-variable "vpc_cidr" {
-  description = "CIDR block for the VPC created for the ECS service."
-  type        = string
-  default     = "10.30.0.0/16"
-}
-
-variable "public_subnets" {
-  description = "CIDR blocks for the public subnets (ALB + Fargate tasks with public IP)."
-  type        = list(string)
-  default     = ["10.30.101.0/24", "10.30.102.0/24"]
-}
-
 variable "log_retention_in_days" {
   description = "CloudWatch log retention (in days) for the Next.js task logs. Small value keeps storage cost near zero."
   type        = number

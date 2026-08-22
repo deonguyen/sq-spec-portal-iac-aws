@@ -8,25 +8,11 @@ data "aws_ecr_repository" "app" {
   name = var.ecr_repository_name
 }
 
-# A new VPC and subnets are created to host the service.
-module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 5.0"
-
-  name = "frontend-vpc-staging"
-  cidr = var.vpc_cidr
-
-  azs             = ["${var.aws_region}a", "${var.aws_region}b"]
-  public_subnets  = var.public_subnets
-  enable_nat_gateway = false # For cost savings; tasks need public IPs to pull from ECR.
-  enable_dns_hostnames = true
-}
-
 # Security group for the ALB to allow public inbound HTTP traffic.
 resource "aws_security_group" "alb" {
   name        = "frontend-alb-sg-staging"
   description = "Allow HTTP inbound traffic"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
 
   ingress {
     from_port   = 80
@@ -45,9 +31,9 @@ resource "aws_security_group" "alb" {
 
 # Security group for the Fargate tasks. Allows inbound from the ALB.
 resource "aws_security_group" "ecs_task" {
-  name        = "sq-spec-portal-frontend-ecs-task-sg-staging"
+  name        = "frontend-task-sg-staging"
   description = "Allow ALB to connect to the Next.js container"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
 
   ingress {
     from_port       = var.container_port
@@ -70,14 +56,14 @@ resource "aws_lb" "this" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
-  subnets            = module.vpc.public_subnets
+  subnets            = data.terraform_remote_state.vpc.outputs.public_subnet_ids
 }
 
 resource "aws_lb_target_group" "this" {
   name        = "frontend-tg-staging"
   port        = var.container_port
   protocol    = "HTTP"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
   target_type = "ip"
 
   health_check {
@@ -164,7 +150,7 @@ resource "aws_ecs_service" "this" {
   desired_count   = var.desired_count
 
   network_configuration {
-    subnets         = module.vpc.public_subnets
+    subnets         = data.terraform_remote_state.vpc.outputs.public_subnet_ids
     security_groups = [aws_security_group.ecs_task.id]
     assign_public_ip = var.assign_public_ip
   }
