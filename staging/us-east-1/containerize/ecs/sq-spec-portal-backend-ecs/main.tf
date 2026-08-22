@@ -59,7 +59,7 @@ resource "aws_ecs_cluster_capacity_providers" "this" {
 resource "aws_ecs_task_definition" "this" {
   for_each = local.services_grouped
 
-  family                   = "backend-service-${each.key}-staging"
+  family                   = "backend-${each.key}-task-definition-staging"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = tostring(var.task_cpu)
@@ -70,7 +70,7 @@ resource "aws_ecs_task_definition" "this" {
   container_definitions = jsonencode([
     for c in each.value.containers : merge(
       {
-        name      = "backend-container-${c.original_key}-staging"
+        name      = "backend-${c.original_key}-container-staging"
         image     = c.image != null ? c.image : "${data.aws_ecr_repository.app[c.original_key].repository_url}:${c.image_tag}"
         essential = c.essential
         cpu       = c.cpu != null ? c.cpu : var.app_cpu # Note: cpu and memory are now required in variables.tf
@@ -106,7 +106,7 @@ resource "aws_ecs_task_definition" "this" {
   ])
 
   tags = {
-    Name      = "backend-service-${each.key}-staging"
+    Name      = "backend-${each.key}-task-definition-staging"
     ManagedBy = "Terraform"
   }
 }
@@ -114,7 +114,7 @@ resource "aws_ecs_task_definition" "this" {
 resource "aws_ecs_service" "this" {
   for_each = local.services_grouped
 
-  name            = "backend-service-${each.key}-staging"
+  name            = "backend-${each.key}-service-staging"
   cluster         = aws_ecs_cluster.this.id
   task_definition = aws_ecs_task_definition.this[each.key].arn
   desired_count   = each.value.containers[0].desired_count
@@ -135,7 +135,7 @@ resource "aws_ecs_service" "this" {
     for_each = { for c in each.value.containers : c.container_port => c }
     content {
       target_group_arn = aws_lb_target_group.this[load_balancer.value.original_key].arn
-      container_name   = "backend-container-${load_balancer.value.original_key}-staging"
+      container_name   = "backend-${load_balancer.value.original_key}-container-staging"
       container_port   = load_balancer.value.container_port
     }
   }
@@ -146,11 +146,11 @@ resource "aws_ecs_service" "this" {
   depends_on = [
     aws_lb_listener.http,
     aws_lb_listener_rule.path,
-    aws_iam_role_policy_attachment.task_execution_role_policy,
+    aws_iam_role_policy_attachment.task_execution_role_policy_attachment,
   ]
 
   tags = {
-    Name      = "backend-service-${each.key}-staging"
+    Name      = "backend-${each.key}-service-staging"
     ManagedBy = "Terraform"
   }
 }
