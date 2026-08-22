@@ -162,7 +162,7 @@ data "aws_iam_policy_document" "github_actions_ecs_policy_document" {
 resource "aws_iam_policy" "github_actions_ecs_policy" {
   name        = "frontend-github-actions-policy-staging"
   description = "Allows the GitHub Actions OIDC role to manage this ECS service via Terraform."
-  policy      = data.aws_iam_policy_document.github_actions_ecs_policy.json
+  policy      = data.aws_iam_policy_document.github_actions_ecs_policy_document.json
 }
 
 resource "aws_iam_role_policy_attachment" "github_actions_ecs_policy_attachment" {

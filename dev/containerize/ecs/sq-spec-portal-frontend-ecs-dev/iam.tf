@@ -1,6 +1,6 @@
 # IAM role assumed by ECS at task launch to pull the image from ECR and write logs.
 resource "aws_iam_role" "task_execution_role" {
-  name = "${var.service_name}-task-execution-role-staging"
+  name = "frontend-task-execution-role-staging"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -16,14 +16,14 @@ resource "aws_iam_role" "task_execution_role" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "task_execution_role_policy" {
+resource "aws_iam_role_policy_attachment" "task_execution_role_policy_attachment" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
   role       = aws_iam_role.task_execution_role.name
 }
 
 # IAM role assumed by the running Next.js container. Attach app-specific policies here (e.g. for S3, etc.).
 resource "aws_iam_role" "task_role" {
-  name = "${var.service_name}-task-role-staging"
+  name = "frontend-task-role-staging"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -40,7 +40,7 @@ resource "aws_iam_role" "task_role" {
 }
 
 # Grant the GitHub Actions OIDC role permission to run `terraform apply` against this module.
-data "aws_iam_policy_document" "github_actions_ecs_manage" {
+data "aws_iam_policy_document" "github_actions_ecs_policy_document" {
   statement {
     sid    = "EcsManage"
     effect = "Allow"
@@ -107,8 +107,8 @@ data "aws_iam_policy_document" "github_actions_ecs_manage" {
       "iam:ListRoleTags",
     ]
     resources = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.service_name}-task-execution-role-staging",
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.service_name}-task-role-staging",
+      "arn:aws:iam::885388406688:role/frontend-task-execution-role-staging",
+      "arn:aws:iam::885388406688:role/frontend-task-role-staging",
     ]
   }
 
@@ -119,8 +119,8 @@ data "aws_iam_policy_document" "github_actions_ecs_manage" {
       "iam:PassRole",
     ]
     resources = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.service_name}-task-execution-role-staging",
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.service_name}-task-role-staging",
+      "arn:aws:iam::885388406688:role/frontend-task-execution-role-staging",
+      "arn:aws:iam::885388406688:role/frontend-task-role-staging",
     ]
     condition {
       test     = "StringEquals"
@@ -159,13 +159,13 @@ data "aws_iam_policy_document" "github_actions_ecs_manage" {
   }
 }
 
-resource "aws_iam_policy" "github_actions_ecs_manage" {
-  name        = "sq-spec-portal-backend-ecs-github-actions-manage-staging"
+resource "aws_iam_policy" "github_actions_ecs_policy" {
+  name        = "frontend-github-actions-policy-staging"
   description = "Allows the GitHub Actions OIDC role to manage this ECS service via Terraform."
-  policy      = data.aws_iam_policy_document.github_actions_ecs_manage.json
+  policy      = data.aws_iam_policy_document.github_actions_ecs_policy_document.json
 }
 
-resource "aws_iam_role_policy_attachment" "github_actions_ecs_manage" {
+resource "aws_iam_role_policy_attachment" "github_actions_ecs_policy_attachment" {
   role       = var.github_actions_role_name
-  policy_arn = aws_iam_policy.github_actions_ecs_manage.arn
+  policy_arn = aws_iam_policy.github_actions_ecs_policy.arn
 }

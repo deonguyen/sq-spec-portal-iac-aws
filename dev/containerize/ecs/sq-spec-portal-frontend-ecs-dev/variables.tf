@@ -4,28 +4,22 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
-variable "service_name" {
-  description = "The name of the ECS service (also used as the cluster and log group prefix)."
-  type        = string
-  default     = "sq-spec-portal-frontend"
-}
-
 variable "ecr_repository_name" {
   description = "The name of the ECR repository holding the Next.js application image."
   type        = string
-  default     = "sq-spec-portal-frontend-repos"
+  default     = "sq-spec-portal-frontend-repos-staging"
 }
 
 variable "image_tag" {
   description = "The image tag to deploy from the ECR repository."
   type        = string
-  default     = "latest"
+  default     = "staging" # TODO: update with the desired image tag
 }
 
 variable "container_port" {
   description = "The port the Next.js container listens on."
   type        = number
-  default     = 3000
+  default     = 3002
 }
 
 variable "cpu" {
