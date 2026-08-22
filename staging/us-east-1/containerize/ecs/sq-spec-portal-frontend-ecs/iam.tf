@@ -40,7 +40,7 @@ resource "aws_iam_role" "task_role" {
 }
 
 # Grant the GitHub Actions OIDC role permission to run `terraform apply` against this module.
-data "aws_iam_policy_document" "github_actions_ecs_policy" {
+data "aws_iam_policy_document" "github_actions_ecs_policy_document" {
   statement {
     sid    = "EcsManage"
     effect = "Allow"

@@ -59,7 +59,7 @@ resource "aws_ecs_cluster_capacity_providers" "this" {
 resource "aws_ecs_task_definition" "this" {
   for_each = local.services_grouped
 
-  family                   = "${var.service_name}-${each.key}"
+  family                   = "backend-${each.key}-task-definition-staging"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = tostring(var.task_cpu)

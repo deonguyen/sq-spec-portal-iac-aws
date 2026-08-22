@@ -10,12 +10,6 @@ variable "ecs_cluster_name" {
   default     = "backend-cluster-staging"
 }
 
-variable "service_name" {
-  description = "Common prefix for the ECS cluster, log groups, ALB, IAM roles, and service names."
-  type        = string
-  default     = "sq-spec-portal-backend-ecs-staging"
-}
-
 # Each entry defines one backend deployed behind the shared ALB.
 # path_patterns are matched by ALB listener rules (in `priority` order).
 # container_port is the port the app listens on inside the task; the ALB
@@ -133,18 +127,6 @@ variable "use_fargate_spot" {
   description = "Use FARGATE_SPOT capacity provider instead of on-demand FARGATE. ~70% cheaper; tasks can be interrupted with 2 minute notice."
   type        = bool
   default     = true
-}
-
-variable "vpc_cidr" {
-  description = "CIDR block for the VPC created for the ECS services."
-  type        = string
-  default     = "10.20.0.0/16"
-}
-
-variable "public_subnets" {
-  description = "CIDR blocks for the public subnets (ALB + Fargate tasks with public IP)."
-  type        = list(string)
-  default     = ["10.20.101.0/24", "10.20.102.0/24"]
 }
 
 variable "log_retention_in_days" {

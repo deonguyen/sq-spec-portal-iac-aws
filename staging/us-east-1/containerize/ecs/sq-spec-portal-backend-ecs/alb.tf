@@ -1,7 +1,7 @@
 resource "aws_security_group" "alb" {
   name        = "backend-alb-sg-staging"
   description = "Allow public HTTP traffic to the ALB gateway."
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
 
   ingress {
     description = "HTTP from anywhere"
@@ -28,7 +28,7 @@ resource "aws_security_group" "alb" {
 resource "aws_security_group" "service" {
   name        = "backend-svc-sg-staging"
   description = "Allow the ALB to reach the app container on each service port."
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
 
   # Create a flattened map of all container ports across all services
   dynamic "ingress" {
@@ -69,7 +69,7 @@ resource "aws_lb" "this" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
-  subnets            = module.vpc.public_subnets
+  subnets            = data.terraform_remote_state.vpc.outputs.public_subnet_ids
 
   # access_logs {
   #   bucket  = var.alb_log_bucket_name
@@ -89,7 +89,7 @@ resource "aws_lb_target_group" "this" {
   port        = each.value.container_port
   protocol    = "HTTP"
   target_type = "ip"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
 
   health_check {
     path                = lookup(each.value, "health_check_path", "/health")

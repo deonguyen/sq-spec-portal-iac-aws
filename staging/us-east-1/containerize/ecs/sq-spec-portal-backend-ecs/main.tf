@@ -38,7 +38,7 @@ resource "aws_ecs_cluster" "this" {
   }
 
   tags = {
-    Name      = var.service_name
+    Name      = var.ecs_cluster_name
     ManagedBy = "Terraform"
   }
 }
@@ -126,7 +126,7 @@ resource "aws_ecs_service" "this" {
   }
 
   network_configuration {
-    subnets          = module.vpc.public_subnets
+    subnets          = data.terraform_remote_state.vpc.outputs.public_subnet_ids
     security_groups  = [aws_security_group.service.id]
     assign_public_ip = var.assign_public_ip
   }

@@ -1,6 +1,6 @@
 # IAM role assumed by ECS at task launch to pull images from ECR and write logs.
 resource "aws_iam_role" "task_execution_role" {
-  name = "sq-spec-portal-backend-ecs-task-execution-role-staging"
+  name = "backend-task-execution-role-staging"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -24,7 +24,7 @@ resource "aws_iam_role_policy_attachment" "task_execution_role_policy" {
 # IAM role assumed by the running Django containers. Attach app-specific
 # policies here (S3, SQS, Secrets Manager, etc.). Shared across all services.
 resource "aws_iam_role" "task_role" {
-  name = "sq-spec-portal-backend-ecs-task-role-staging"
+  name = "backend-task-role-staging"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -40,7 +40,7 @@ resource "aws_iam_role" "task_role" {
   })
 }
 
-data "aws_iam_policy_document" "github_actions_ecs_manage" {
+data "aws_iam_policy_document" "github_actions_ecs_policy_document" {
   statement {
     sid    = "EcsManage"
     effect = "Allow"
@@ -107,8 +107,8 @@ data "aws_iam_policy_document" "github_actions_ecs_manage" {
       "iam:ListRoleTags",
     ]
     resources = [
-      "arn:aws:iam::885388406688:role/sq-spec-portal-backend-ecs-task-execution-role-staging",
-      "arn:aws:iam::885388406688:role/sq-spec-portal-backend-ecs-task-role-staging",
+      "arn:aws:iam::885388406688:role/backend-task-execution-role-staging",
+      "arn:aws:iam::885388406688:role/backend-task-role-staging",
     ]
   }
 
@@ -119,8 +119,8 @@ data "aws_iam_policy_document" "github_actions_ecs_manage" {
       "iam:PassRole",
     ]
     resources = [
-      "arn:aws:iam::885388406688:role/sq-spec-portal-backend-ecs-task-execution-role-staging",
-      "arn:aws:iam::885388406688:role/sq-spec-portal-backend-ecs-task-role-staging",
+      "arn:aws:iam::885388406688:role/backend-task-execution-role-staging",
+      "arn:aws:iam::885388406688:role/backend-task-role-staging",
     ]
     condition {
       test     = "StringEquals"
@@ -176,13 +176,13 @@ data "aws_iam_policy_document" "github_actions_ecs_manage" {
   }
 }
 
-resource "aws_iam_policy" "github_actions_ecs_manage" {
-  name        = "sq-spec-portal-backend-ecs-github-actions-manage-staging"
+resource "aws_iam_policy" "github_actions_ecs_policy" {
+  name        = "backend-github-actions-policy-staging"
   description = "Allows the GitHub Actions OIDC role to manage this ECS gateway stack via Terraform."
-  policy      = data.aws_iam_policy_document.github_actions_ecs_manage.json
+  policy      = data.aws_iam_policy_document.github_actions_ecs_policy_document.json
 }
 
-resource "aws_iam_role_policy_attachment" "github_actions_ecs_manage" {
+resource "aws_iam_role_policy_attachment" "github_actions_ecs_policy_attachment" {
   role       = var.github_actions_role_name
-  policy_arn = aws_iam_policy.github_actions_ecs_manage.arn
+  policy_arn = aws_iam_policy.github_actions_ecs_policy.arn
 }
