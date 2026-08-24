@@ -37,7 +37,7 @@ variable "ecr_repository_name" {
 variable "image_tag" {
   description = "The image tag to deploy from the ECR repository."
   type        = string
-  default     = "latest"
+  default     = "staging"
 }
 
 variable "container_name" {
@@ -91,7 +91,7 @@ variable "runtime_environment_variables" {
 variable "health_check_path" {
   description = "HTTP path used by the ALB target group health check."
   type        = string
-  default     = "/health"
+  default     = "/api/health"
 }
 
 variable "log_retention_in_days" {
