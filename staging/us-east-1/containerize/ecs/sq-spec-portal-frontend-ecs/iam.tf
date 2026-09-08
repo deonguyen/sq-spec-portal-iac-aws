@@ -39,6 +39,32 @@ resource "aws_iam_role" "task_role" {
   })
 }
 
+# IAM policy to allow ECS Exec.
+data "aws_iam_policy_document" "ecs_exec_policy_document" {
+  statement {
+    sid    = "AllowEcsExec"
+    effect = "Allow"
+    actions = [
+      "ssmmessages:CreateControlChannel",
+      "ssmmessages:CreateDataChannel",
+      "ssmmessages:OpenControlChannel",
+      "ssmmessages:OpenDataChannel"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "ecs_exec_policy" {
+  name        = "frontend-ecs-exec-policy-staging"
+  description = "Allows ECS Exec access to the container."
+  policy      = data.aws_iam_policy_document.ecs_exec_policy_document.json
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_exec_policy_attachment" {
+  role       = aws_iam_role.task_role.name
+  policy_arn = aws_iam_policy.ecs_exec_policy.arn
+}
+
 # Grant the GitHub Actions OIDC role permission to run `terraform apply` against this module.
 data "aws_iam_policy_document" "github_actions_ecs_policy_document" {
   statement {

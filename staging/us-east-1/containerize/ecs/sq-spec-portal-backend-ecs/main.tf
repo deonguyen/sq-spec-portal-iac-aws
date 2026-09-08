@@ -118,6 +118,7 @@ resource "aws_ecs_service" "this" {
   cluster         = aws_ecs_cluster.this.id
   task_definition = aws_ecs_task_definition.this[each.key].arn
   desired_count   = each.value.containers[0].desired_count
+  enable_execute_command = true
 
   capacity_provider_strategy {
     capacity_provider = var.use_fargate_spot ? "FARGATE_SPOT" : "FARGATE"
