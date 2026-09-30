@@ -29,11 +29,11 @@ resource "aws_security_group" "db_sg" {
 
   # Inbound rule for PostgreSQL
   ingress {
-    description = "Allow PostgreSQL traffic from within the VPC"
+    description = "Allow PostgreSQL traffic"
     from_port   = 5432
     to_port     = 5432
     protocol    = "tcp"
-    cidr_blocks = [data.terraform_remote_state.vpc.outputs.vpc_cidr_block]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   # Outbound rule allowing all traffic
@@ -52,7 +52,7 @@ resource "aws_security_group" "db_sg" {
 
 resource "aws_db_subnet_group" "default" {
   name       = "sq-spec-portal-db-stage-subnet-group"
-  subnet_ids = data.terraform_remote_state.vpc.outputs.private_subnet_ids
+  subnet_ids = data.terraform_remote_state.vpc.outputs.public_subnet_ids
 
   tags = {
     Name = "sq-spec-portal-db-stage-subnet-group"
@@ -66,7 +66,8 @@ resource "aws_db_instance" "default" {
   instance_class         = var.db_instance_class
   allocated_storage      = 20
   db_subnet_group_name   = aws_db_subnet_group.default.name
-  vpc_security_group_ids = [aws_security_group.db.id]
+  vpc_security_group_ids = [aws_security_group.db_sg.id]
+  publicly_accessible    = true
   db_name                = var.db_name
   username               = var.db_username
   password               = random_password.password.result
